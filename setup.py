@@ -38,5 +38,8 @@ setuptools.setup(
 
     packages=[package],
 
-    #install_requires=[],
+    install_requires=[
+        'h5py>=2.2.0',
+        'pylibconfig2>=0.2.0'
+    ],
 )
