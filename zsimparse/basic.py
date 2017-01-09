@@ -45,6 +45,10 @@ def get_hdf5_by_dir(simdir, suffix='-ev'):
     fobj = h5py.File(h5fname, 'r')
     dset = fobj['stats']['root']
     if suffix == '-ev':
+        if dset.shape[0] < 2:
+            raise RuntimeError('{}: get_hdf5_by_dir: incomplete simulation in '
+                               '{}, bad hdf5 file {}'
+                               .format(PACKAGE_NAME, simdir, h5fname))
         dset = dset[-1]
     return dset
 
