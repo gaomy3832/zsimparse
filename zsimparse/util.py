@@ -8,6 +8,9 @@ import collections
 import types
 
 
+PACKAGE_NAME = 'zsimparse'
+
+
 def format_names(names):
     '''
     Format `names` and return as a tuple of hierarchical names.
