@@ -20,6 +20,10 @@ class TestBasic(unittest.TestCase):
     ''' Test basic.py. '''
 
     def setUp(self):
+        # Example sim directory.
+        self.simdir = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'simdir')
         # Create config.
         self.cfg = lcfg.Config('g1 = {s1 = {t1 = 1; t2 = "val";}} '
                                'g2 = (0, 1, 2); '
@@ -44,6 +48,43 @@ class TestBasic(unittest.TestCase):
         tfname = self.fhdl.name
         self.fhdl.close()
         self.assertFalse(os.path.exists(tfname))
+
+    def test_get_config_by_dir(self):
+        ''' Test get_config_by_dir(). '''
+        cfg = zsimparse.get_config_by_dir(self.simdir)
+        self.assertIsNotNone(cfg)
+        self.assertIsNotNone(zsimparse.config_get(cfg, 'sys'))
+
+    def test_get_hdf5_by_dir(self):
+        ''' Test get_hdf5_by_dir(). '''
+        dset = zsimparse.get_hdf5_by_dir(self.simdir)
+        self.assertIsNotNone(dset)
+        self.assertGreater(zsimparse.hdf5_get(dset, 'phase'), 0)
+        dset = zsimparse.get_hdf5_by_dir(self.simdir, suffix='')
+        self.assertGreater(dset.shape[0], 1)
+
+    def test_get_config_by_dir_bad_dir(self):
+        ''' Test get_config_by_dir() when dir is invalid. '''
+        bad_dir = os.path.join(self.simdir, 'sim')
+        try:
+            _ = zsimparse.get_config_by_dir(bad_dir)
+        except ValueError as e:
+            self.assertIn('cfg', str(e))
+
+    def test_get_hdf5_by_dir_bad_dir(self):
+        ''' Test get_hdf5_by_dir() when dir is invalid. '''
+        bad_dir = os.path.join(self.simdir, 'sim')
+        try:
+            _ = zsimparse.get_hdf5_by_dir(bad_dir)
+        except ValueError as e:
+            self.assertIn('hdf5', str(e))
+
+    def test_get_hdf5_by_dir_bad_suffix(self):
+        ''' Test get_hdf5_by_dir() when suffix is invalid. '''
+        try:
+            _ = zsimparse.get_hdf5_by_dir(self.simdir, suffix='abc')
+        except ValueError as e:
+            self.assertIn('suffix', str(e))
 
     def test_config_get(self):
         ''' Test config_get(). '''
