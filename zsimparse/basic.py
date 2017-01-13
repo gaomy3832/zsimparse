@@ -75,7 +75,7 @@ def hdf5_get(dset, names):
         data = dset
         for n in names:
             data = data[n]
-    except (KeyError, ValueError):
+    except (IndexError, KeyError, ValueError):
         return None
     return np.array(data)
 
