@@ -4,8 +4,8 @@
  *
 """
 
-import numpy as np
 import os
+import numpy as np
 
 import h5py
 import pylibconfig2 as lcfg
