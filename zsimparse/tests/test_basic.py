@@ -6,9 +6,9 @@
 
 import unittest
 
-import numpy as np
 import os
 from tempfile import NamedTemporaryFile
+import numpy as np
 
 import h5py
 import pylibconfig2 as lcfg
