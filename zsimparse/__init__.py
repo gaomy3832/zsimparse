@@ -13,6 +13,9 @@ You should have received a copy of the Modified BSD-3 License along with this
 program. If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 
+from .config import Config
+from .h5stat import H5Stat
+
 from .basic import get_config_by_dir, get_hdf5_by_dir
 from .basic import config_get, hdf5_get
 
