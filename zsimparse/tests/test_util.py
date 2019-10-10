@@ -31,8 +31,15 @@ class TestUtil(unittest.TestCase):
                               ('ab', 12,))
         self.assertTupleEqual(zsimparse.util.format_names('a b 0 1'),
                               ('a', 'b', '0', '1'))
+        self.assertTupleEqual(zsimparse.util.format_names('a.b.0.1'),
+                              ('a', 'b', '0', '1'))
+        self.assertTupleEqual(zsimparse.util.format_names(['a b 0', 'c.1.xy']),
+                              ('a', 'b', '0', 'c', '1', 'xy'))
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_format_names_invalid(self):
+        ''' Test format_names() invalid inputs. '''
+        with self.assertRaises(ValueError):
+            _ = zsimparse.util.format_names(None)
+        with self.assertRaises(ValueError):
+            _ = zsimparse.util.format_names(1.2)
 

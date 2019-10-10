@@ -13,8 +13,7 @@ You should have received a copy of the Modified BSD-3 License along with this
 program. If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 
-import collections
-import types
+import collections.abc
 
 
 PACKAGE_NAME = 'zsimparse'
@@ -24,15 +23,30 @@ def format_names(names):
     '''
     Format `names` and return as a tuple of hierarchical names.
 
-    Given `names` can be a single string/integer, or a sequence of
-    strings/integers. If names are all strings, `names` can also be a
-    whitespace-delimited string.
+    `names` can be a single string/integer, or a sequence of strings/integers.
+    Each string will be decomposed into a sequence of strings, using
+    whitespaces and dot (`.`) as separators.
     '''
-    # Support whitespace-delimited string names.
-    if isinstance(names, types.StringTypes):
-        names = names.split()
-    # Make sure names is a non-string iterable.
-    if not isinstance(names, collections.Iterable):
-        names = (names,)
-    return tuple(names)
+    def _sep(string):
+        return string.replace('.', ' ').split()
+
+    # Translate a single string or integer to a list.
+    if isinstance(names, str):
+        # In Python 3 all strings are unicode by default.
+        names = _sep(names)
+    elif isinstance(names, int):
+        # In Python 3 no diff between int and long.
+        names = [names]
+    elif not isinstance(names, collections.abc.Iterable):
+        raise ValueError('{}: names need to be a sequence or '
+                         'a single string/integer'
+                         .format(PACKAGE_NAME))
+    names2 = []
+    for n in names:
+        if isinstance(n, str):
+            names2 += _sep(n)
+        else:
+            names2.append(n)
+
+    return tuple(names2)
 
