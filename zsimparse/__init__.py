@@ -14,6 +14,7 @@ program. If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 
 from .base_data_dict import BaseDataDict
+from .cache_stat import CacheStat
 from .config import Config
 from .h5stat import H5Stat
 
@@ -23,7 +24,7 @@ from .basic import config_get, hdf5_get
 from .cache import get_cache_read_hit, get_cache_read_miss, \
         get_cache_write_hit, get_cache_write_miss, \
         get_cache_hit, get_cache_miss, get_cache_read, get_cache_write, \
-        get_cache_access, get_cache_insertion
+        get_cache_access, get_cache_insertion, get_cache_writeback
 
 __version__ = '0.1.0'
 
