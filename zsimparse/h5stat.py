@@ -16,54 +16,39 @@ program. If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 import os
 
 import h5py
+import numpy as np
 
+from .base_data_dict import BaseDataDict
 from . import util
 
-class H5Stat:
+class H5Stat(BaseDataDict):
     '''
-    A wrapper class of h5 stat that supports convenient construct and access.
+    A wrapper class of h5 stat.
     '''
 
-    def __init__(self, fname):
+    @classmethod
+    def make_from_file(cls, fname):
         '''
         Construct from an h5 file.
         '''
-        self.fname = fname
-        if not os.path.exists(self.fname):
+        if not os.path.exists(fname):
             raise ValueError('{}: {}: no h5 file {} found'
-                             .format(util.PACKAGE_NAME,
-                                     self.__class__.__name__,
-                                     self.fname))
-
-        fobj = h5py.File(self.fname, 'r')
-        self.stat = fobj['stats']['root']
-        if self.stat.shape[0] < 2:
+                             .format(util.PACKAGE_NAME, cls.__name__, fname))
+        fobj = h5py.File(fname, 'r')
+        stat = fobj['stats']['root']
+        if stat.shape[0] < 2:
             raise RuntimeError('{}: {}: incomplete simulation for h5 file {}'
-                               .format(util.PACKAGE_NAME,
-                                       self.__class__.__name__,
-                                       self.fname))
+                               .format(util.PACKAGE_NAME, cls.__name__, fname))
+
+        return cls(stat)
 
 
     def num_samples(self):
         ''' Get the number of stat samples. '''
-        return self.stat.shape[0]
+        return np.prod(self.ddict.shape)
 
 
-    def get(self, names):
-        '''
-        Get the counter value associated with `names`. Return `None` if not
-        exist.
-        '''
-        names = util.format_names(names)
-        val = self.stat
-        try:
-            for n in names:
-                val = val[n]
-        except (IndexError, KeyError, TypeError):
-            return None
-        return val
-
-
-    def __getitem__(self, key):
-        return self.stat[key]
+    def num_dims(self):
+        ''' Get the dimensions of stat samples. '''
+        return len(self.ddict.shape)
 

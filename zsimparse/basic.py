@@ -22,14 +22,16 @@ def get_config_by_dir(simdir):
     '''
     Get the libconfig object from ```simdir`/out.cfg''.
     '''
-    return Config(os.path.join(simdir, 'out.cfg'))
+    return Config.make_from_file(os.path.join(simdir, 'out.cfg'))
 
 
-def get_hdf5_by_dir(simdir):
+def get_hdf5_by_dir(simdir, final_only=False):
     '''
-    Get the hdf5 data stat from ```simdir`/zsim.h5''.
+    Get the hdf5 data stat from ```simdir`/zsim.h5''. If `final_only` is True,
+    return only the final stat snapshot instead of the periodic sequence.
     '''
-    return H5Stat(os.path.join(simdir, 'zsim.h5'))
+    stat_seq = H5Stat.make_from_file(os.path.join(simdir, 'zsim.h5'))
+    return stat_seq.lookup(-1) if final_only else stat_seq
 
 
 def config_get(cfg, names):

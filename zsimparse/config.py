@@ -17,48 +17,24 @@ import os
 
 import libconf
 
+from .base_data_dict import BaseDataDict
 from . import util
 
-class Config:
+class Config(BaseDataDict):
     '''
-    A wrapper class of libconfig object that supports convenient construct and
-    access.
+    A wrapper class of libconfig object.
     '''
 
-    def __init__(self, fname):
+    @classmethod
+    def make_from_file(cls, fname):
         '''
         Construct from a libconfig file.
         '''
-        self.fname = fname
-        if not os.path.exists(self.fname):
+        if not os.path.exists(fname):
             raise ValueError('{}: {}: no cfg file {} found'
-                             .format(util.PACKAGE_NAME,
-                                     self.__class__.__name__,
-                                     self.fname))
+                             .format(util.PACKAGE_NAME, cls.__name__, fname))
+        with open(fname, 'r') as fh:
+            cfg = libconf.load(fh)
 
-        with open(self.fname, 'r') as fh:
-            self.cfg = libconf.load(fh)
-
-
-    def get(self, names):
-        '''
-        Get the config value associated with `names`. Return `None` if not
-        exist.
-        '''
-        names = util.format_names(names)
-        val = self.cfg
-        try:
-            for n in names:
-                val = val[n]
-        except (IndexError, KeyError, TypeError):
-            return None
-        return val
-
-
-    def __getitem__(self, key):
-        return self.cfg.__getitem__(key)
-
-
-    def __getattr__(self, attr):
-        return self.__getitem__(attr)
+        return cls(cfg)
 
