@@ -43,3 +43,15 @@ class TestUtil(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = zsimparse.util.format_names(1.2)
 
+    def test_str_names(self):
+        ''' Test str_names(). '''
+        self.assertEqual(zsimparse.util.str_names(['ab', 'c']),
+                         'ab.c')
+        self.assertEqual(zsimparse.util.str_names(['ab', 12]),
+                         'ab.12')
+        self.assertEqual(zsimparse.util.str_names(['a', 'b', '0', '1']),
+                         'a.b.0.1')
+        self.assertEqual(
+            zsimparse.util.str_names(zsimparse.util.format_names('a.b.0.1')),
+            'a.b.0.1')
+

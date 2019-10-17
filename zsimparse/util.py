@@ -50,3 +50,11 @@ def format_names(names):
 
     return tuple(names2)
 
+
+def str_names(names):
+    '''
+    Translate a tuple of hierarchical names to a string with dot (`.`) as
+    separator.
+    '''
+    return '.'.join([str(n) for n in names])
+
