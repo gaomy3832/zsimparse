@@ -1,9 +1,9 @@
-Running on: maverick-6
-Start time: Sun Jan  8 20:11:25 2017
-Heartbeat time: Sun Jan  8 20:11:29 2017
+Running on: congou-2
+Start time: Wed Oct 16 08:58:53 2019
+Heartbeat time: Wed Oct 16 08:58:55 2019
 Stats since start:
- 184 phases
- 1840000 cycles
- 460000 cycles/s
-Stats since last heartbeat (1483935089s):
+ 75 phases
+ 750000 cycles
+ 375000 cycles/s
+Stats since last heartbeat (1571216335s):
  0 cycles/s

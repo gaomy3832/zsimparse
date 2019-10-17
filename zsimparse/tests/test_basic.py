@@ -16,11 +16,8 @@ program. If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 import unittest
 
 import os
-from tempfile import NamedTemporaryFile
-import numpy as np
 
-import h5py
-import pylibconfig2 as lcfg
+import libconf
 
 import zsimparse
 
@@ -33,30 +30,6 @@ class TestBasic(unittest.TestCase):
         self.simdir = os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             'simdir')
-        # Create config.
-        self.cfg = lcfg.Config('g1 = {s1 = {t1 = 1; t2 = "val";}} '
-                               'g2 = (0, 1, 2); '
-                               'g3 = 3;')
-
-        # Create temp file.
-        self.fhdl = NamedTemporaryFile(suffix='.h5')
-        # Create file object.
-        self.fobj = h5py.File(self.fhdl.name, 'r+')
-        # Create the datasets.
-        dtype = np.dtype([('g1', np.dtype([('t1', 'u8', (100,)),
-                                           ('t2', 'u8')])),
-                          ('g2', 'u8', (10, 10))])
-        dset = np.array(((np.ones(100),
-                          10),
-                         np.zeros((10, 10))),
-                        dtype=dtype)
-        self.fobj.create_dataset('root', data=dset)
-
-    def tearDown(self):
-        # Close (and remove) temp file.
-        tfname = self.fhdl.name
-        self.fhdl.close()
-        self.assertFalse(os.path.exists(tfname))
 
     def test_get_config_by_dir(self):
         ''' Test get_config_by_dir(). '''
@@ -66,72 +39,140 @@ class TestBasic(unittest.TestCase):
 
     def test_get_hdf5_by_dir(self):
         ''' Test get_hdf5_by_dir(). '''
-        dset = zsimparse.get_hdf5_by_dir(self.simdir)
-        self.assertIsNotNone(dset)
-        self.assertGreater(zsimparse.hdf5_get(dset, 'phase'), 0)
-        dset = zsimparse.get_hdf5_by_dir(self.simdir, suffix='')
-        self.assertGreater(dset.shape[0], 1)
+        stat = zsimparse.get_hdf5_by_dir(self.simdir)
+        self.assertIsNotNone(stat)
+        self.assertGreater(stat.num_samples(), 1)
+        stat_first = zsimparse.hdf5_get(stat, 0)
+        stat_last = zsimparse.hdf5_get(stat, -1)
+        self.assertEqual(stat_first['phase'], 0)
+        self.assertGreater(stat_last['phase'], 0)
+        self.assertEqual(
+            zsimparse.get_hdf5_by_dir(self.simdir, final_only=True).raw,
+            stat_last)
 
     def test_get_config_by_dir_bad_dir(self):
         ''' Test get_config_by_dir() when dir is invalid. '''
         bad_dir = os.path.join(self.simdir, 'sim')
-        try:
+        with self.assertRaisesRegex(ValueError, '.*cfg.*'):
             _ = zsimparse.get_config_by_dir(bad_dir)
-        except ValueError as e:
-            self.assertIn('cfg', str(e))
 
     def test_get_hdf5_by_dir_bad_dir(self):
         ''' Test get_hdf5_by_dir() when dir is invalid. '''
         bad_dir = os.path.join(self.simdir, 'sim')
-        try:
+        with self.assertRaisesRegex(ValueError, '.*h5.*'):
             _ = zsimparse.get_hdf5_by_dir(bad_dir)
-        except ValueError as e:
-            self.assertIn('hdf5', str(e))
-
-    def test_get_hdf5_by_dir_bad_suffix(self):
-        ''' Test get_hdf5_by_dir() when suffix is invalid. '''
-        try:
-            _ = zsimparse.get_hdf5_by_dir(self.simdir, suffix='abc')
-        except ValueError as e:
-            self.assertIn('suffix', str(e))
 
     def test_config_get(self):
         ''' Test config_get(). '''
-        self.assertEqual(zsimparse.config_get(self.cfg, ('g1', 's1', 't1')), 1)
-        self.assertEqual(zsimparse.config_get(self.cfg, ('g2', 1)), 1)
-        self.assertEqual(zsimparse.config_get(self.cfg, 'g1 s1 t2'), 'val')
-        self.assertEqual(zsimparse.config_get(self.cfg, 'g3'), 3)
+        cfg = zsimparse.get_config_by_dir(self.simdir)
+        cfg.raw['list'] = [1, 2, 3]
+
+        self.assertEqual(
+            zsimparse.config_get(cfg, ('sys', 'caches', 'l1d', 'size')),
+            65536)
+        self.assertEqual(
+            zsimparse.config_get(cfg, ('list', 1)),
+            2)
+        self.assertEqual(
+            zsimparse.config_get(cfg, 'sys caches l1d type'),
+            'Simple')
+        self.assertEqual(
+            zsimparse.config_get(cfg, 'sim.maxTotalInstrs'),
+            libconf.LibconfInt64(0))
+
+        self.assertEqual(cfg['sys']['caches']['l1d']['size'], 65536)
+        self.assertEqual(cfg['list'][1], 2)
+        self.assertEqual(cfg['sys']['caches']['l1d']['type'], 'Simple')
+        self.assertEqual(cfg['sim']['maxTotalInstrs'], libconf.LibconfInt64(0))
+
+        self.assertEqual(cfg.sys.caches.l1d.size, 65536)
+        self.assertEqual(cfg.sys.caches.l1d.type, 'Simple')
+        self.assertEqual(cfg.sim.maxTotalInstrs, libconf.LibconfInt64(0))
 
     def test_config_get_invalid_names(self):
         ''' Test config_get() with invalid names. '''
-        self.assertIsNone(zsimparse.config_get(self.cfg, ('g1', 's2')))
-        self.assertIsNone(zsimparse.config_get(self.cfg, 'g1 s1 t3'))
-        self.assertIsNone(zsimparse.config_get(self.cfg, 'g4'))
+        cfg = zsimparse.get_config_by_dir(self.simdir)
+        cfg.raw['list'] = [1, 2, 3]
+
+        self.assertIsNone(zsimparse.config_get(cfg, ('g1', 's2')))
+        self.assertIsNone(zsimparse.config_get(cfg, 'g1 s1 t3'))
+        self.assertIsNone(zsimparse.config_get(cfg, 'g4'))
+
+        with self.assertRaises(KeyError):
+            _ = cfg['g1']['s2']
+        with self.assertRaises(KeyError):
+            _ = cfg['g1']['s1']['t3']
+        with self.assertRaises(IndexError):
+            _ = cfg['list'][4]
+        with self.assertRaises(TypeError):
+            _ = cfg['sys']['frequency'][1]
+
+        with self.assertRaises(KeyError):
+            _ = cfg.g1.s2
+        with self.assertRaises(KeyError):
+            _ = cfg.g1.s1.t3
+        with self.assertRaises(IndexError):
+            _ = cfg.list[4]
+        with self.assertRaises(TypeError):
+            _ = cfg.sys.frequency[1]
+
+    def test_config_lookup(self):
+        ''' Test lookup(). '''
+        val = zsimparse.get_config_by_dir(self.simdir)
+        for key in ('sys', 'caches', 'l1d', 'size'):
+            val = val.lookup(key)
+        self.assertEqual(val.raw, 65536)
 
     def test_hdf5_get(self):
         ''' Test hdf5_get(). '''
-        # /root/g1/t1.
-        g1_t1 = zsimparse.hdf5_get(self.fobj, ('root', 'g1', 't1'))
-        self.assertIsNotNone(g1_t1)
-        self.assertEqual(g1_t1.shape, (100,))
-        self.assertTrue((g1_t1 == 1).all())
-        # /root/g1/t2.
-        g1_t2 = zsimparse.hdf5_get(self.fobj, ('root g1 t2'))
-        self.assertIsNotNone(g1_t2)
-        self.assertEqual(g1_t2, 10)
-        # /root/g2.
-        g2 = zsimparse.hdf5_get(self.fobj['root'], 'g2')
-        self.assertIsNotNone(g2)
-        self.assertEqual(g2.shape, (10, 10))
-        self.assertTrue((g2 == 0).all())
+        stat = zsimparse.get_hdf5_by_dir(self.simdir)
+
+        last_l2_putx = 0
+        last_c0_instrs = 0
+        for idx in range(stat.num_samples()):
+            c0_instrs = zsimparse.hdf5_get(stat, (idx, 'simpleCore', 0, 'instrs'))
+            l2_putx = zsimparse.hdf5_get(stat, (idx, 'l2', 0, 'PUTX'))
+            self.assertGreaterEqual(c0_instrs, last_c0_instrs)
+            self.assertGreaterEqual(l2_putx, last_l2_putx)
+
+    def test_hdf5_get_final_only(self):
+        ''' Test hdf5_get() for final only. '''
+        stat = zsimparse.get_hdf5_by_dir(self.simdir, final_only=True)
+
+        l2_putx = zsimparse.hdf5_get(stat, ('l2', 0, 'PUTX'))
+        self.assertEqual(l2_putx, 1545)
+        self.assertEqual(stat['l2'][0]['PUTX'], l2_putx)
+
+        sched_rqszhist = stat.lookup('sched.rqSzHist')
+        self.assertEqual(sched_rqszhist.num_samples(), 17)
+        self.assertEqual(sched_rqszhist.num_dims(), 1)
+        sched_rqszhist = sched_rqszhist.raw
+        self.assertEqual(sched_rqszhist[0], 121)
+        self.assertTrue((sched_rqszhist[1:] == 0).all())
+        self.assertTrue((stat['sched']['rqSzHist'] == sched_rqszhist).all())
 
     def test_hdf5_get_invalid_names(self):
         ''' Test hdf5_get() with invalid names. '''
-        self.assertIsNone(zsimparse.hdf5_get(self.fobj, ('g1', 't1')))
-        self.assertIsNone(zsimparse.hdf5_get(self.fobj, 'root g2 t1'))
-        self.assertIsNone(zsimparse.hdf5_get(self.fobj, 'g3'))
+        stat = zsimparse.get_hdf5_by_dir(self.simdir)
 
+        self.assertIsNone(zsimparse.hdf5_get(stat, ('g1', 't1')))
+        self.assertIsNone(zsimparse.hdf5_get(stat, 'root g2 t1'))
+        self.assertIsNone(zsimparse.hdf5_get(stat, 'g3'))
+        self.assertIsNone(zsimparse.hdf5_get(stat, (-1, 'phase', 'g3')))
 
-if __name__ == '__main__':
-    unittest.main()
+        with self.assertRaises(ValueError):
+            _ = stat['g1']['t1']
+        with self.assertRaises(ValueError):
+            _ = stat['root']['g2']['t1']
+        with self.assertRaises(ValueError):
+            _ = stat['g3']
+        with self.assertRaises(IndexError):
+            _ = stat[-1]['phase']['g3']
+
+    def test_hdf5_lookup(self):
+        ''' Test lookup(). '''
+        val = zsimparse.get_hdf5_by_dir(self.simdir)
+        for key in (-1, 'l2', 0, 'PUTX'):
+            val = val.lookup(key)
+        self.assertEqual(val.raw, 1545)
 
