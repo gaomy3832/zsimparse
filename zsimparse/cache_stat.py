@@ -15,6 +15,7 @@ program. If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 
 import numpy as np
 
+from .base_data_dict import BaseDataDict
 from .h5stat import H5Stat
 from . import util
 
@@ -29,6 +30,8 @@ class CacheStat(H5Stat):
         '''
         Construct from a h5 stat with the names of the cache.
         '''
+        if not isinstance(stat, BaseDataDict):
+            stat = BaseDataDict(stat)
         raw = stat.get(cache_names)
         if raw is None:
             raise ValueError('{}: {}: cannot get cache {} from h5 stat'

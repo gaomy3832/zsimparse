@@ -94,3 +94,9 @@ class TestCache(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '.*not a cache stat.*'):
             _ = zsimparse.CacheStat(self.dset, 'simpleCore')
 
+    def test_raw_stat_input(self):
+        ''' Test with a raw stat input. '''
+        data = zsimparse.get_hdf5_by_dir(self.simdir)
+        self.assertEqual(zsimparse.get_cache_hit(self.dset, 'l2'),
+                         zsimparse.get_cache_hit(data[-1], 'l2'))
+
