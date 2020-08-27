@@ -39,7 +39,7 @@ class CacheStat(H5Stat):
                                      self.__class__.__name__,
                                      cache_names))
         super().__init__(raw)
-        dummy = self.get('hGETS')  # used to decide shape and type
+        dummy = self.get('mGETS')  # used to decide shape and type
         if dummy is None:
             raise ValueError('{}: {}: {} is not a cache stat'
                              .format(util.PACKAGE_NAME,
