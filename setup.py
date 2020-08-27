@@ -40,7 +40,7 @@ setuptools.setup(
     description=DESC,
 
     author='Mingyu Gao',
-    author_email='mgao12@stanford.edu',
+    author_email='gaomy@tsinghua.edu.cn',
     long_description=_readme(),
     url='https://github.com/gaomy3832/zsimparse',
     license='BSD 3-clause',
@@ -50,14 +50,13 @@ setuptools.setup(
     include_package_data=True,
 
     install_requires=[
-        'coverage>=4',
-        'h5py>=2.2.0',
+        'coverage>=5',
+        'h5py>=2.10.0',
         'numpy>=1.7',
-        'pylibconfig2>=0.2.0',
-        'pyparsing>=2',
+        'libconf>=2.0.0',
         'pytest>=3',
         'pytest-cov>=2',
-        'pytest-xdist>=1',
+        'pytest-xdist>=2',
     ],
 
     keywords='zsim parse libconfig hdf5',
@@ -66,7 +65,9 @@ setuptools.setup(
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: System :: Hardware',
         'Topic :: Utilities',
     ],

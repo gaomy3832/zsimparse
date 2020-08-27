@@ -1,0 +1,7 @@
+coverage==5.2.1
+h5py==2.10.0
+numpy==1.13.1
+libconf==2.0.1
+pytest==6.0.1
+pytest-cov==2.10.1
+pytest-xdist==2.1.0
